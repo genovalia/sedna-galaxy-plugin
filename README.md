@@ -54,3 +54,16 @@ Sorties : un fichier d'échantillons (`tabular`) et un fichier VCF compressé av
 - Le jeton est visible dans les paramètres du job.
 - La tâche de génération du VCF attend au plus 1 h (`--max-wait`, 3600 s).
 - Le parcours complet a été testé contre une API simulée. Il n'a pas encore été testé contre l'API Sedna de production.
+
+## Tests de contrat
+
+`tests/test_contracts.py` vérifie les API publiques dont dépend le plugin : le catalogue Sedna, les échantillons, les VCF, le refus de `generate-vcf` sans jeton, les titres et descriptions de la metadata-api, et la liste déroulante elle-même. Les tests sont en lecture seule et n'utilisent pas de jeton.
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q tests/test_contracts.py
+```
+
+Le workflow `.github/workflows/contract-tests.yml` les lance chaque jour à 11 h UTC contre la production. Il peut aussi être lancé à la main depuis l'onglet **Actions**. Un échec signifie qu'une API a changé ou est indisponible ; GitHub envoie alors une notification à l'auteur du dernier commit.
+
+Les variables `SEDNA_URL`, `METADATA_URL` et `CONTRACT_DATASET_ID` permettent de viser une autre instance ou un autre jeu de données.
