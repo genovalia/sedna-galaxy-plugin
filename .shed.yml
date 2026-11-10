@@ -1,0 +1,9 @@
+name: sedna_fetch
+owner: genovalia
+description: Charge les échantillons (TSV) et le VCF d'un jeu de données Sedna dans un historique Galaxy.
+homepage_url: https://catalog-backend.apps.genovalia.ulaval.ca
+long_description: Appelle l'API Sedna (data-explorer) avec le jeton Keycloak de l'utilisateur ; les droits d'accès au jeu de données sont ceux de son compte.
+categories:
+  - Data Source
+remote_repository_url: https://github.com/genovalia/sedna-galaxy-plugin
+type: unrestricted

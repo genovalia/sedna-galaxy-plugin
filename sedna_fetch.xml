@@ -1,0 +1,31 @@
+<tool id="sedna_fetch" name="Sedna: charger un jeu de données" version="0.1.0" profile="23.0">
+    <description>échantillons (TSV) et VCF d'un jeu de données Sedna</description>
+    <requirements>
+        <requirement type="package" version="2.32">requests</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        python '$__tool_directory__/sedna_fetch.py'
+            --url '$url'
+            #if $token and str($token).strip()
+            --token '$token'
+            #end if
+            --dataset-id '$dataset_id'
+            #if $genomic_data_id and str($genomic_data_id).strip()
+            --genomic-data-id '$genomic_data_id'
+            #end if
+            --samples-out '$samples'
+            --vcf-out '$vcf'
+    ]]></command>
+    <code file="sedna_options.py"/>
+    <inputs>
+        <param name="url" type="text" value="https://catalog-backend.apps.genovalia.ulaval.ca" label="URL de l'API Sedna" refresh_on_change="true"/>
+        <param name="token" type="text" optional="true" label="Jeton Keycloak (Bearer)" refresh_on_change="true" help="Laisser vide pour un jeu de données public (liste d'identifiants seulement). Avec un jeton : vos jeux de données, avec leur nom. Expire vite ; il reste visible dans les paramètres du job."/>
+        <param name="dataset_id" type="select" label="Jeu de données" refresh_on_change="true" dynamic_options="list_datasets(url, token)" help="Tapez pour filtrer."/>
+        <param name="genomic_data_id" type="select" optional="true" label="VCF" dynamic_options="list_vcfs(url, token, dataset_id)" help="Seulement si le jeu de données a plusieurs VCF."/>
+    </inputs>
+    <outputs>
+        <data name="samples" format="tabular" label="Sedna ${dataset_id} : échantillons"/>
+        <data name="vcf" format="vcf_bgzip" label="Sedna ${dataset_id} : VCF"/>
+    </outputs>
+    <help>Sans jeton : jeux de données publics (échantillons et VCF complet). Avec un jeton Keycloak : les droits d'accès sont ceux de votre compte.</help>
+</tool>
