@@ -88,8 +88,7 @@ def main():
         return
 
     # VCF generation is a Celery task: start, poll, download
-    r = s.post(f"{base}/datasets/{a.dataset_id}/genomic-data/{a.genomic_data_id}/generate-vcf",
-               json={"dataset_sample_ids": [], "dataset_all_samples": True}, timeout=TIMEOUT)
+    r = s.post(f"{base}/datasets/{a.dataset_id}/genomic-data/{a.genomic_data_id}/generate-vcf", timeout=TIMEOUT)
     if r.status_code != 202:
         sys.exit(f"generate-vcf -> {r.status_code}: {r.text[:300]}")
     task_id = r.json()["task_id"]
