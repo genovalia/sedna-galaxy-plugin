@@ -47,7 +47,7 @@ Si Galaxy tourne dans un conteneur, montez le dépôt en lecture seule et pointe
 - **Jeu de données** : liste déroulante avec filtre (tapez pour filtrer). Chaque entrée affiche le titre, le nombre d'échantillons et le nombre de variants.
 - **VCF** : à remplir seulement si le jeu de données contient plusieurs VCF.
 
-Sorties : un fichier d'échantillons (`tabular`) et un fichier VCF compressé avec BGZF (`vcf_bgzip`).
+Sorties : un fichier d'échantillons (`tabular`) et un fichier VCF en texte (`vcf`). Le téléchargement compressé (`.vcf.gz`) est décompressé à la réception.
 
 ## Limites
 

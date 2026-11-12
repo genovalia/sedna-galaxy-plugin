@@ -25,7 +25,7 @@
     </inputs>
     <outputs>
         <data name="samples" format="tabular" label="Sedna ${dataset_id} : échantillons"/>
-        <data name="vcf" format="vcf_bgzip" label="Sedna ${dataset_id} : VCF"/>
+        <data name="vcf" format="vcf" label="Sedna ${dataset_id} : VCF"/>
     </outputs>
     <help>Sans jeton : jeux de données publics (échantillons et VCF complet). Avec un jeton Keycloak : les droits d'accès sont ceux de votre compte.</help>
 </tool>
