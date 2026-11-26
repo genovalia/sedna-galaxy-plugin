@@ -6,7 +6,7 @@ Outil Galaxy `sedna_fetch` : il charge un jeu de données [Sedna](https://catalo
 
 - `sedna_fetch.xml` : définition de l'outil (formulaire et sorties)
 - `sedna_fetch.py` : appels à l'API Sedna (échantillons, VCF)
-- `sedna_options.py` : listes déroulantes (jeux de données, VCF)
+- `sedna_options.py` : listes déroulantes (jeux de données, VCF), titres depuis la metadata-api v2
 - `.shed.yml` : métadonnées pour le Tool Shed
 
 ## Prérequis
@@ -57,7 +57,7 @@ Sorties : un fichier d'échantillons (`tabular`) et un fichier VCF en texte (`vc
 
 ## Tests de contrat
 
-`tests/test_contracts.py` vérifie les API publiques dont dépend le plugin : le catalogue Sedna, les échantillons, les VCF, le refus de `generate-vcf` sans jeton, les titres et descriptions de la metadata-api, et la liste déroulante elle-même. Les tests sont en lecture seule et n'utilisent pas de jeton.
+`tests/test_contracts.py` vérifie les API publiques dont dépend le plugin : le catalogue Sedna, les échantillons, les VCF, le refus de `generate-vcf` sans jeton, les titres et descriptions de la metadata-api v2, et la liste déroulante elle-même. Les tests sont en lecture seule et n'utilisent pas de jeton.
 
 ```bash
 pip install -r requirements-dev.txt

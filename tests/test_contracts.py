@@ -21,9 +21,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import sedna_options  # noqa: E402
 
 SEDNA_ROOT = os.environ.get("SEDNA_URL", "https://catalog-backend.apps.genovalia.ulaval.ca").rstrip("/")
-METADATA_ROOT = os.environ.get("METADATA_URL", "https://metadata-api.apps.genovalia.ulaval.ca").rstrip("/")
+METADATA_ROOT = os.environ.get("METADATA_URL", "https://metadata.genovalia.ulaval.ca").rstrip("/")
 SEDNA = SEDNA_ROOT + "/v1"
-METADATA = METADATA_ROOT + "/v1"
+METADATA = METADATA_ROOT + "/v2"
 DATASET = os.environ.get("CONTRACT_DATASET_ID", "alcant1")
 TIMEOUT = 30
 
@@ -108,14 +108,17 @@ def test_metadata_datasets_have_title_and_description():
     rows, total = _all_metadata_datasets()
     assert len(rows) == total, f"pagination returned {len(rows)} of {total} datasets"
     for d in rows:
-        assert isinstance(d["id"], str) and d["id"]
-        assert isinstance(d.get("title"), str) and d["title"].strip(), f"{d['id']}: no title"
-        assert isinstance(d.get("description"), str) and d["description"].strip(), f"{d['id']}: no description"
+        assert isinstance(d["identifier"], str) and d["identifier"]
+        title, description = d.get("title") or {}, d.get("description") or {}
+        assert isinstance(title, dict) and any(v and v.strip() for v in title.values()), f"{d['identifier']}: no title"
+        assert isinstance(description, dict) and any(
+            v and v.strip() for v in description.values()
+        ), f"{d['identifier']}: no description"
 
 
 def test_every_catalog_dataset_has_metadata(catalog):
     rows, _ = _all_metadata_datasets()
-    meta_ids = {d["id"] for d in rows}
+    meta_ids = {d["identifier"] for d in rows}
     missing = [d["dataset_id"] for d in catalog if d["dataset_id"] not in meta_ids]
     assert not missing, f"datasets in the catalog but not in metadata-api: {missing}"
 
