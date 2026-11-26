@@ -112,6 +112,69 @@ L'outil produit ses deux sorties (échantillons et VCF) dans un seul job, avec `
 - La tâche de génération du VCF attend au plus 1 h (`--max-wait`, 3600 s).
 - Un seul job produit les deux sorties ; un échec sur l'une fait échouer visuellement les deux (voir ci-dessus).
 
+## Publier sur le Galaxy Tool Shed (déclarer l'outil)
+
+Le [Tool Shed](https://toolshed.g2.bx.psu.edu/) est le dépôt public où une instance Galaxy va chercher un outil par nom/catégorie au lieu d'un `git clone` manuel (section [Installation](#installation-instance-galaxy-de-productionpartagée) ci-dessus). Le dépôt contient déjà `.shed.yml` (métadonnées : nom `sedna_fetch`, propriétaire `genovalia`, catégorie `Data Source`) ; il ne reste qu'à créer/mettre à jour le dépôt côté Tool Shed avec [Planemo](https://planemo.readthedocs.io/).
+
+### Prérequis
+
+- Un compte sur le [Tool Shed de test](https://testtoolshed.g2.bx.psu.edu/) et sur le [Tool Shed principal](https://toolshed.g2.bx.psu.edu/) (comptes séparés, mêmes identifiants pas forcément synchronisés). Noter le `shed_username` choisi à l'inscription.
+- Planemo installé : `pip install planemo` (ou `pip install --break-system-packages planemo` si l'environnement Python est géré par le système).
+- Un fichier `~/.planemo.yml` avec les identifiants, créé une fois avec `planemo config_init` puis complété :
+
+  ```yaml
+  test_toolshed:
+    shed_username: "<votre shed_username>"
+    key: "<clé API du Tool Shed de test>"      # ou email + password
+  toolshed:
+    shed_username: "<votre shed_username>"
+    key: "<clé API du Tool Shed principal>"    # ou email + password
+  ```
+
+  La clé API se génère dans **User → Preferences → Manage API Key** sur chaque Tool Shed.
+
+### Étapes
+
+1. Vérifier que `.shed.yml` et l'outil sont valides :
+
+   ```bash
+   cd sedna-galaxy-plugin
+   planemo shed_lint --tools
+   ```
+
+   Les `WARNING` actuels (pas de tests Planemo intégrés au `.xml`, `dynamic_options` déprécié, pas de citation) sont connus et n'empêchent pas la publication — seule une vraie erreur (`ERROR`) doit être corrigée avant de continuer.
+
+2. **Créer le dépôt sur le Tool Shed de test d'abord** (jamais directement sur le principal) :
+
+   ```bash
+   planemo shed_create --shed_target testtoolshed
+   ```
+
+   Cette commande ne se lance qu'une fois : elle crée le dépôt distant à partir des métadonnées de `.shed.yml`. Si le dépôt existe déjà (ex. créé manuellement sur le site), utiliser `shed_update` directement.
+
+3. Installer le dépôt de test dans une instance Galaxy jetable (voir [Tester en local avec Docker](#tester-en-local-avec-docker-sans-toucher-à-une-instance-partagée)) en ajoutant le Tool Shed de test à `config/tool_sheds_conf.xml` de cette instance, puis l'installer depuis l'interface **Admin → Tool Sheds**. Vérifier que le panneau d'outil et un job de test fonctionnent comme en local.
+
+4. Une fois satisfait, publier sur le Tool Shed principal :
+
+   ```bash
+   planemo shed_create --shed_target toolshed
+   ```
+
+### Mettre à jour une version déjà publiée
+
+Après une modification du code ou de `sedna_fetch.xml` (incrémenter `version=` dans le `<tool>`), pousser la mise à jour :
+
+```bash
+planemo shed_diff --shed_target toolshed      # voir ce qui va changer, optionnel
+planemo shed_update --check_diff --shed_target toolshed
+```
+
+`--check_diff` évite de créer une nouvelle révision si rien n'a réellement changé. Répéter sur `testtoolshed` en premier par prudence, comme pour la création initiale.
+
+### Après publication
+
+Dans une instance Galaxy de production, l'outil s'installe alors directement depuis **Admin → Tool Sheds → Search and browse tool sheds**, sans `git clone` ni édition manuelle de `tool_conf.xml` : chercher `sedna_fetch`, catégorie **Data Source**, propriétaire **genovalia**.
+
 ## Tests de contrat
 
 `tests/test_contracts.py` vérifie les API publiques dont dépend le plugin : le catalogue Sedna, les échantillons, les VCF, le refus de `generate-vcf` sans jeton, les titres et descriptions de la metadata-api v2, et la liste déroulante elle-même. Les tests sont en lecture seule et n'utilisent pas de jeton.
