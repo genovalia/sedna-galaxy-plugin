@@ -6,12 +6,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # noqa: E402
 import sedna_options  # noqa: E402
 
 
-def test_prefers_french():
-    assert sedna_options._title_text({"en": "Code Beluga", "fr": "Projet code Béluga"}) == "Projet code Béluga"
+def test_prefers_english():
+    assert sedna_options._title_text({"en": "Code Beluga", "fr": "Projet code Béluga"}) == "Code Beluga"
 
 
-def test_falls_back_to_english_without_french():
-    assert sedna_options._title_text({"en": "Code Beluga"}) == "Code Beluga"
+def test_falls_back_to_french_without_english():
+    assert sedna_options._title_text({"fr": "Projet code Béluga"}) == "Projet code Béluga"
 
 
 def test_falls_back_to_any_language_left():

@@ -1,5 +1,5 @@
-<tool id="sedna_fetch" name="Sedna: charger un jeu de données" version="0.3.0" profile="23.0">
-    <description>échantillons (TSV) et VCF d'un jeu de données Sedna</description>
+<tool id="sedna_fetch" name="Get VCFs from Sedna, a solution by Genovalia" version="0.3.1" profile="23.0">
+    <description>sample sheet (TSV) and VCFs of a Sedna dataset</description>
     <requirements>
         <requirement type="package" version="2.32">requests</requirement>
     </requirements>
@@ -15,14 +15,14 @@
     ]]></command>
     <code file="sedna_options.py"/>
     <inputs>
-        <param name="token" type="text" optional="true" label="Jeton Keycloak (Bearer)" refresh_on_change="true" help="Laisser vide pour un jeu de données public (liste d'identifiants seulement). Avec un jeton : vos jeux de données, avec leur nom. Expire vite ; il reste visible dans les paramètres du job."/>
-        <param name="dataset_id" type="select" label="Jeu de données" refresh_on_change="true" dynamic_options="list_datasets(token)" help="Tapez pour filtrer."/>
+        <param name="token" type="text" optional="true" label="Keycloak token (Bearer)" refresh_on_change="true" help="Leave empty for a public dataset (identifiers only, no name). With a token: your own datasets, with their name. Expires quickly; it stays visible in the job's parameters."/>
+        <param name="dataset_id" type="select" label="Dataset" refresh_on_change="true" dynamic_options="list_datasets(token)" help="Type to filter."/>
     </inputs>
     <outputs>
-        <data name="samples" format="tabular" label="Sedna ${dataset_id} : échantillons"/>
-        <collection name="vcfs" type="list" label="Sedna ${dataset_id} : VCF">
+        <data name="samples" format="tabular" label="Sedna ${dataset_id}: samples"/>
+        <collection name="vcfs" type="list" label="Sedna ${dataset_id}: VCFs">
             <discover_datasets pattern="(?P&lt;designation&gt;.+)\.vcf" format="vcf" directory="vcfs"/>
         </collection>
     </outputs>
-    <help>Sans jeton : jeux de données publics (échantillons et tous les VCF disponibles). Avec un jeton Keycloak : les droits d'accès sont ceux de votre compte. Tous les VCF du jeu de données sont téléchargés, dans une collection (un fichier par VCF, nommé d'après l'assemblage/le nom communiqués par Sedna).</help>
+    <help>Without a token: public datasets only (samples and every available VCF). With a Keycloak token: access rights are those of your account. Every VCF of the dataset is downloaded, as a collection (one file per VCF, named after the assembly/name reported by Sedna).</help>
 </tool>

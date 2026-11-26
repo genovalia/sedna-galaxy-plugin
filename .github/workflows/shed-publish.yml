@@ -1,0 +1,65 @@
+name: Publish to Galaxy Tool Shed
+
+# Publishes sedna_fetch to the test Tool Shed and the main Tool Shed whenever the
+# tool's own files (or its Tool Shed metadata) change on main. planemo shed_update
+# is idempotent: it is a no-op (not a failure) when there is nothing new to publish,
+# so this can safely run on every push instead of only on a version bump.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "sedna_fetch.xml"
+      - "sedna_fetch.py"
+      - "sedna_options.py"
+      - ".shed.yml"
+      - "requirements*.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install planemo
+
+      - name: Write ~/.planemo.yml from secrets
+        run: |
+          mkdir -p ~
+          cat > ~/.planemo.yml <<EOF
+          sheds:
+            testtoolshed:
+              key: ${{ secrets.TESTTOOLSHED_API_KEY }}
+              username: ${{ vars.TOOLSHED_USERNAME }}
+            toolshed:
+              key: ${{ secrets.TOOLSHED_API_KEY }}
+              username: ${{ vars.TOOLSHED_USERNAME }}
+          EOF
+
+      # Only a hard ERROR fails the build; the known WARNINGs (no tests, deprecated
+      # dynamic_options, no citations) are accepted and must not block publishing.
+      - run: planemo shed_lint --tools --fail_level error
+
+      - name: Publish to the test Tool Shed
+        run: planemo shed_update --shed_target testtoolshed --check_diff
+
+      - name: Publish to the main Tool Shed
+        run: planemo shed_update --shed_target toolshed --check_diff
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
+          payload: |
+            channel: "github-ci"
+            text: ":x: *${{ github.event.repository.name }}* — `${{ github.workflow }}` failed (${{ github.event_name }}, ${{ github.ref_name }}) (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|logs>)"

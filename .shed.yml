@@ -1,11 +1,11 @@
 name: sedna_fetch
 owner: svissault
-description: Charge les échantillons (TSV) et tous les VCF d'un jeu de données Sedna dans un historique Galaxy.
+description: Loads the sample sheet (TSV) and every VCF of a Sedna dataset into a Galaxy history.
 homepage_url: https://sedna.apps.genovalia.ulaval.ca/en
 long_description: >
-  Appelle l'API Sedna (data-explorer) pour récupérer la fiche échantillons et tous les VCF disponibles
-  d'un jeu de données, avec le jeton Keycloak de l'utilisateur ; les droits d'accès au jeu de données
-  sont ceux de son compte. Sans jeton, seuls les jeux de données publics du catalogue sont listés.
+  Calls the Sedna API (data-explorer) to fetch the sample sheet and every available VCF of a dataset,
+  using the user's Keycloak token; dataset access rights are those of their account. Without a token,
+  only public datasets from the catalogue are listed.
 categories:
   - Data Source
   - Sequence Analysis

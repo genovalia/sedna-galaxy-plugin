@@ -14,7 +14,7 @@ SEDNA_URL = "https://catalog-backend.apps.genovalia.ulaval.ca"  # hardcoded: kep
 TIMEOUT = 5  # the form waits for these calls: keep short
 CACHE_TTL = 60  # Galaxy evaluates each select several times while building the form
 METADATA_URL = "https://metadata.genovalia.ulaval.ca"  # public: dataset titles (metadata-api v2)
-TITLE_LANGS = ("fr", "en")  # preferred language, in order, for the dropdown label
+TITLE_LANGS = ("en", "fr")  # preferred language, in order, for the dropdown label
 TITLE_MAX = 120  # the title is shown in the dropdown label
 _cache = {}
 
@@ -84,12 +84,12 @@ def _fetch_datasets(token):
         r.raise_for_status()
         rows = r.json()
     except Exception as e:
-        return _error(f"Liste indisponible : {e}")
+        return _error(f"List unavailable: {e}")
     titles = _titles()
     if token:
         options = [
             (
-                f"{titles.get(d['dataset_id']) or d.get('name') or d['dataset_id']} ({d.get('species') or 'espèce ?'})",
+                f"{titles.get(d['dataset_id']) or d.get('name') or d['dataset_id']} ({d.get('species') or 'unknown species'})",
                 d["dataset_id"],
                 False,
             )
@@ -99,10 +99,10 @@ def _fetch_datasets(token):
         options = [
             (
                 f"{titles.get(d['dataset_id']) or d['dataset_id']}"
-                f" ({d.get('sample_size', 0):,} échantillons, {d.get('variant_count', 0):,} variants)",
+                f" ({d.get('sample_size', 0):,} samples, {d.get('variant_count', 0):,} variants)",
                 d["dataset_id"],
                 False,
             )
             for d in rows
         ]
-    return sorted(options, key=lambda o: o[0].lower()) or _error("Aucun jeu de données accessible")
+    return sorted(options, key=lambda o: o[0].lower()) or _error("No accessible dataset")

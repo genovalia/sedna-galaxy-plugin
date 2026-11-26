@@ -139,4 +139,4 @@ def test_dropdown_lists_public_datasets_without_error():
     assert options, "no options"
     # an error is returned as an option with an empty value
     assert all(value for _, value, _ in options), options[0]
-    assert all("échantillons" in label for label, _, _ in options), options[0]
+    assert all("samples" in label for label, _, _ in options), options[0]
