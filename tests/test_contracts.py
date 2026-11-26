@@ -16,8 +16,9 @@ from pathlib import Path
 import pytest
 import requests
 
-# sedna_options.py sits at the repo root, next to the tool
+# sedna_options.py / sedna_fetch.py sit at the repo root, next to the tool
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import sedna_fetch  # noqa: E402
 import sedna_options  # noqa: E402
 
 SEDNA_ROOT = os.environ.get("SEDNA_URL", "https://catalog-backend.apps.genovalia.ulaval.ca").rstrip("/")
@@ -125,8 +126,16 @@ def test_every_catalog_dataset_has_metadata(catalog):
 
 # --- the plugin itself, against production ----------------------------------------------
 
+def test_hardcoded_sedna_url_is_consistent():
+    # The URL is no longer a user-editable form field (removed so it can't be mistyped/misdirected);
+    # both modules hardcode it instead, and this test is what actually exercises that value daily.
+    # Checked against the real default, not SEDNA_ROOT, so a SEDNA_URL override for testing elsewhere
+    # doesn't make this fail for the wrong reason.
+    assert sedna_fetch.SEDNA_URL == sedna_options.SEDNA_URL == "https://catalog-backend.apps.genovalia.ulaval.ca"
+
+
 def test_dropdown_lists_public_datasets_without_error():
-    options = sedna_options.list_datasets(SEDNA_ROOT, "")
+    options = sedna_options.list_datasets("")
     assert options, "no options"
     # an error is returned as an option with an empty value
     assert all(value for _, value, _ in options), options[0]

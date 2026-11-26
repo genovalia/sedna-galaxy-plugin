@@ -1,31 +1,28 @@
-<tool id="sedna_fetch" name="Sedna: charger un jeu de données" version="0.2.0" profile="23.0">
+<tool id="sedna_fetch" name="Sedna: charger un jeu de données" version="0.3.0" profile="23.0">
     <description>échantillons (TSV) et VCF d'un jeu de données Sedna</description>
     <requirements>
         <requirement type="package" version="2.32">requests</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
+        mkdir -p vcfs &&
         python '$__tool_directory__/sedna_fetch.py'
-            --url '$url'
             #if $token and str($token).strip()
             --token '$token'
             #end if
             --dataset-id '$dataset_id'
-            #if $genomic_data_id and str($genomic_data_id).strip()
-            --genomic-data-id '$genomic_data_id'
-            #end if
             --samples-out '$samples'
-            --vcf-out '$vcf'
+            --vcf-dir 'vcfs'
     ]]></command>
     <code file="sedna_options.py"/>
     <inputs>
-        <param name="url" type="text" value="https://catalog-backend.apps.genovalia.ulaval.ca" label="URL de l'API Sedna" refresh_on_change="true"/>
         <param name="token" type="text" optional="true" label="Jeton Keycloak (Bearer)" refresh_on_change="true" help="Laisser vide pour un jeu de données public (liste d'identifiants seulement). Avec un jeton : vos jeux de données, avec leur nom. Expire vite ; il reste visible dans les paramètres du job."/>
-        <param name="dataset_id" type="select" label="Jeu de données" refresh_on_change="true" dynamic_options="list_datasets(url, token)" help="Tapez pour filtrer."/>
-        <param name="genomic_data_id" type="select" optional="true" label="VCF" dynamic_options="list_vcfs(url, token, dataset_id)" help="Seulement si le jeu de données a plusieurs VCF."/>
+        <param name="dataset_id" type="select" label="Jeu de données" refresh_on_change="true" dynamic_options="list_datasets(token)" help="Tapez pour filtrer."/>
     </inputs>
     <outputs>
         <data name="samples" format="tabular" label="Sedna ${dataset_id} : échantillons"/>
-        <data name="vcf" format="vcf" label="Sedna ${dataset_id} : VCF"/>
+        <collection name="vcfs" type="list" label="Sedna ${dataset_id} : VCF">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.vcf" format="vcf" directory="vcfs"/>
+        </collection>
     </outputs>
-    <help>Sans jeton : jeux de données publics (échantillons et VCF complet). Avec un jeton Keycloak : les droits d'accès sont ceux de votre compte.</help>
+    <help>Sans jeton : jeux de données publics (échantillons et tous les VCF disponibles). Avec un jeton Keycloak : les droits d'accès sont ceux de votre compte. Tous les VCF du jeu de données sont téléchargés, dans une collection (un fichier par VCF, nommé d'après l'assemblage/le nom communiqués par Sedna).</help>
 </tool>

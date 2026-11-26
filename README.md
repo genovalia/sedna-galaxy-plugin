@@ -1,6 +1,6 @@
 # sedna-galaxy-plugin
 
-Outil Galaxy `sedna_fetch` : il charge un jeu de données [Sedna](https://catalog-backend.apps.genovalia.ulaval.ca) dans l'historique Galaxy, sous forme d'échantillons (`tabular`) et de VCF (`vcf`).
+Outil Galaxy `sedna_fetch` : il charge un jeu de données [Sedna](https://catalog-backend.apps.genovalia.ulaval.ca) dans l'historique Galaxy, sous forme d'échantillons (`tabular`) et de tous ses VCF (collection `vcf`).
 
 Pour parcourir visuellement les jeux de données disponibles (titre, espèce, nombre d'échantillons/variants) avant de les charger dans Galaxy, voir le catalogue Sedna : **https://sedna.apps.genovalia.ulaval.ca/en/catalogue**. L'identifiant du jeu de données affiché sur cette page (ex. `alcant1`) est celui à saisir ou à retrouver dans la liste déroulante **Jeu de données** de l'outil.
 
@@ -9,10 +9,10 @@ Statut : testé en local (Docker) et contre l'API Sedna de production (échantil
 ## Contenu
 
 - `sedna_fetch.xml` : définition de l'outil (formulaire et sorties)
-- `sedna_fetch.py` : appels à l'API Sedna (échantillons, VCF)
-- `sedna_options.py` : listes déroulantes (jeux de données, VCF), titres depuis la metadata-api v2
+- `sedna_fetch.py` : appels à l'API Sedna (échantillons, tous les VCF du jeu de données), URL d'API codée en dur
+- `sedna_options.py` : liste déroulante des jeux de données, titres depuis la metadata-api v2, même URL d'API codée en dur
 - `.shed.yml` : métadonnées pour le Tool Shed
-- `tests/test_contracts.py` : tests de contrat en lecture seule contre les API de production
+- `tests/test_contracts.py` : tests de contrat en lecture seule contre les API de production, y compris la cohérence de l'URL codée en dur
 
 ## Prérequis
 
@@ -97,23 +97,23 @@ Points d'attention connus de l'image `galaxy-min:26.1.2` :
 
 Avant de lancer l'outil, vous pouvez chercher le jeu de données qui vous intéresse dans le [catalogue Sedna](https://sedna.apps.genovalia.ulaval.ca/en/catalogue) (titre, espèce, nombre d'échantillons/variants) pour en noter l'identifiant.
 
-- **URL de l'API Sedna** : la valeur par défaut est l'instance de production. Modifiez-la pour une autre instance.
 - **Jeton Keycloak** : facultatif. Sans jeton, la liste contient les jeux de données publics. Avec un jeton, la liste contient les jeux de données auxquels votre compte a accès, avec leur nom et leur espèce. Le jeton expire vite et reste visible dans les paramètres du job — ne pas réutiliser un job existant comme modèle sans le retirer/regénérer.
 - **Jeu de données** : liste déroulante avec filtre (tapez pour filtrer). Chaque entrée affiche le titre, le nombre d'échantillons et le nombre de variants, tiré de la metadata-api v2.
-- **VCF** : à remplir seulement si le jeu de données contient plusieurs VCF.
 
-Sorties : un fichier d'échantillons (`tabular`) et un fichier VCF (`vcf`). Le téléchargement compressé (`.vcf.gz`) est décompressé à la réception.
+L'URL de l'API Sedna n'est plus un champ du formulaire : elle est fixée dans le code (`sedna_fetch.py` et `sedna_options.py`) et vérifiée chaque jour par les [tests de contrat](#tests-de-contrat), pour éviter qu'elle soit mal saisie ou pointée par erreur vers une autre instance.
+
+Sorties : un fichier d'échantillons (`tabular`) et une **collection** de fichiers VCF (`vcf`) — un par VCF disponible pour le jeu de données (la plupart des jeux n'en ont qu'un). Chaque téléchargement compressé (`.vcf.gz`) est décompressé à la réception.
 
 ### Lire un job en échec dans l'historique
 
-L'outil produit ses deux sorties (échantillons et VCF) dans un seul job, avec `detect_errors="exit_code"`. Si l'étape VCF échoue après que les échantillons ont déjà été écrits avec succès, Galaxy marque quand même **les deux sorties** en échec (le fichier échantillons est bien présent sur disque, mais le job entier est rouge). Avant de conclure que l'outil est cassé :
+L'outil produit ses deux sorties (échantillons et collection de VCF) dans un seul job, avec `detect_errors="exit_code"`. Si l'une des étapes VCF échoue après que les échantillons ont déjà été écrits avec succès, Galaxy marque quand même **les deux sorties** en échec (le fichier échantillons est bien présent sur disque, mais le job entier est rouge). Avant de conclure que l'outil est cassé :
 - vérifier directement avec `curl` l'URL amont que l'étape en échec appelle (même hôte/chemin/paramètres) — un 404/50x confirme que le problème vient de l'API Sedna/metadata-api, pas du plugin ;
 - consulter les paramètres du job dans Galaxy (icône ℹ️) pour voir la commande exacte exécutée et l'URL construite.
 
 ## Limites
 
 - Le jeton est visible dans les paramètres du job.
-- La tâche de génération du VCF attend au plus 1 h (`--max-wait`, 3600 s).
+- La tâche de génération de chaque VCF attend au plus 1 h (`--max-wait`, 3600 s).
 - Un seul job produit les deux sorties ; un échec sur l'une fait échouer visuellement les deux (voir ci-dessus).
 
 ## Publier sur le Galaxy Tool Shed (déclarer l'outil)

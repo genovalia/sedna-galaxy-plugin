@@ -1,15 +1,16 @@
-"""Dynamic options for the sedna_fetch form: dataset and VCF pickers.
+"""Dynamic options for the sedna_fetch form: the dataset picker.
 
-Galaxy evaluates the dynamic_options expressions with the form's parameter values
-by name (url, token, dataset_id), so the functions take them as arguments.
-With a token: the datasets the user can read, with their names (GET /v1/datasets).
-Without: the public catalogue (GET /v1/datasets/catalog). The descriptions come
-from the public metadata-api v2 (GET /v2/datasets), which needs no token.
+Galaxy evaluates the dynamic_options expression with the form's parameter values
+by name (token), so the function takes it as an argument. With a token: the datasets
+the user can read, with their names (GET /v1/datasets). Without: the public catalogue
+(GET /v1/datasets/catalog). The descriptions come from the public metadata-api v2
+(GET /v2/datasets), which needs no token.
 """
 import time
 
 import requests
 
+SEDNA_URL = "https://catalog-backend.apps.genovalia.ulaval.ca"  # hardcoded: kept in sync by tests/test_contracts.py
 TIMEOUT = 5  # the form waits for these calls: keep short
 CACHE_TTL = 60  # Galaxy evaluates each select several times while building the form
 METADATA_URL = "https://metadata.genovalia.ulaval.ca"  # public: dataset titles (metadata-api v2)
@@ -70,19 +71,16 @@ def _fetch_titles():
         return found
 
 
-def list_datasets(url, token):
-    base = _clean(url).rstrip("/")
+def list_datasets(token):
     token = _clean(token)
-    if not base:
-        return _error("Renseigner l'URL de l'API Sedna")
-    return _cached(("datasets", base, token), lambda: _fetch_datasets(base, token))
+    return _cached(("datasets", token), lambda: _fetch_datasets(token))
 
 
-def _fetch_datasets(base, token):
+def _fetch_datasets(token):
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     path = "/v1/datasets" if token else "/v1/datasets/catalog"
     try:
-        r = requests.get(base + path, headers=headers, timeout=TIMEOUT)
+        r = requests.get(SEDNA_URL + path, headers=headers, timeout=TIMEOUT)
         r.raise_for_status()
         rows = r.json()
     except Exception as e:
@@ -108,24 +106,3 @@ def _fetch_datasets(base, token):
             for d in rows
         ]
     return sorted(options, key=lambda o: o[0].lower()) or _error("Aucun jeu de données accessible")
-
-
-def list_vcfs(url, token, dataset_id):
-    base = _clean(url).rstrip("/")
-    token = _clean(token)
-    dataset_id = _clean(dataset_id)
-    if not base or not dataset_id:
-        return []
-    return _cached(("vcfs", base, token, dataset_id), lambda: _fetch_vcfs(base, token, dataset_id))
-
-
-def _fetch_vcfs(base, token, dataset_id):
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
-    try:
-        r = requests.get(f"{base}/v1/datasets/{dataset_id}/genomic-data", headers=headers, timeout=TIMEOUT)
-        r.raise_for_status()
-        rows = r.json()
-    except Exception as e:
-        return _error(f"VCF indisponibles : {e}")
-    # No choice is fine when the dataset has a single VCF: sedna_fetch picks it.
-    return [(f"{g.get('name') or g['id']} ({g.get('assembly') or '?'})", str(g["id"]), False) for g in rows]
