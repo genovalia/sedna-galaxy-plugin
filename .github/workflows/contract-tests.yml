@@ -22,3 +22,14 @@ jobs:
           cache-dependency-path: requirements-dev.txt
       - run: pip install -r requirements-dev.txt
       - run: pytest -q tests/test_contracts.py
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
+          payload: |
+            channel: "github-ci"
+            text: ":x: *${{ github.event.repository.name }}* — `${{ github.workflow }}` failed (${{ github.event_name }}, ${{ github.ref_name }}) (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|logs>)"

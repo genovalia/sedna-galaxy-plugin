@@ -1,0 +1,35 @@
+name: Unit tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q tests/test_save_vcf.py
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
+          payload: |
+            channel: "github-ci"
+            text: ":x: *${{ github.event.repository.name }}* — `${{ github.workflow }}` failed (${{ github.event_name }}, ${{ github.ref_name }}) (<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|logs>)"
