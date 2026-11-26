@@ -2,6 +2,8 @@
 
 Outil Galaxy `sedna_fetch` : il charge un jeu de données [Sedna](https://catalog-backend.apps.genovalia.ulaval.ca) dans l'historique Galaxy, sous forme d'échantillons (`tabular`) et de VCF (`vcf`).
 
+Pour parcourir visuellement les jeux de données disponibles (titre, espèce, nombre d'échantillons/variants) avant de les charger dans Galaxy, voir le catalogue Sedna : **https://sedna.apps.genovalia.ulaval.ca/en/catalogue**. L'identifiant du jeu de données affiché sur cette page (ex. `alcant1`) est celui à saisir ou à retrouver dans la liste déroulante **Jeu de données** de l'outil.
+
 Statut : testé en local (Docker) et contre l'API Sedna de production (échantillons + VCF, metadata-api v2) — voir [Tests de contrat](#tests-de-contrat) et [Limites](#limites).
 
 ## Contenu
@@ -92,6 +94,8 @@ Points d'attention connus de l'image `galaxy-min:26.1.2` :
 - Si l'outil n'arrive pas à joindre l'API Sedna depuis le conteneur alors que `curl` fonctionne depuis l'hôte : le réseau bridge Docker bloque parfois la sortie, surtout avec un VPN actif sur l'hôte. Recréer le conteneur avec `--network host` (Linux) règle généralement le problème — pas besoin de VPN pour les routes `*.apps.genovalia.ulaval.ca` / `*.genovalia.ulaval.ca`, elles sont publiques.
 
 ## Utilisation
+
+Avant de lancer l'outil, vous pouvez chercher le jeu de données qui vous intéresse dans le [catalogue Sedna](https://sedna.apps.genovalia.ulaval.ca/en/catalogue) (titre, espèce, nombre d'échantillons/variants) pour en noter l'identifiant.
 
 - **URL de l'API Sedna** : la valeur par défaut est l'instance de production. Modifiez-la pour une autre instance.
 - **Jeton Keycloak** : facultatif. Sans jeton, la liste contient les jeux de données publics. Avec un jeton, la liste contient les jeux de données auxquels votre compte a accès, avec leur nom et leur espèce. Le jeton expire vite et reste visible dans les paramètres du job — ne pas réutiliser un job existant comme modèle sans le retirer/regénérer.
