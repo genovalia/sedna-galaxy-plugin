@@ -62,23 +62,25 @@ L'outil produit ses deux sorties (échantillons et collection de VCF) dans un se
 
 ## Publier sur le Galaxy Tool Shed
 
-Le [Tool Shed](https://toolshed.g2.bx.psu.edu/) est le dépôt public où une instance Galaxy va chercher un outil par nom/catégorie au lieu d'un `git clone` manuel. Le dépôt contient déjà `.shed.yml` (nom `sedna_fetch`, propriétaire `genovalia`, catégorie `Data Source`) ; il ne reste qu'à créer/mettre à jour le dépôt côté Tool Shed avec [Planemo](https://planemo.readthedocs.io/).
+Le [Tool Shed](https://toolshed.g2.bx.psu.edu/) est le dépôt public où une instance Galaxy va chercher un outil par nom/catégorie au lieu d'un `git clone` manuel. Le dépôt contient déjà `.shed.yml` (nom `sedna_fetch`, catégorie `Data Source`) ; `owner:` y est fixé au nom d'utilisateur du compte Tool Shed qui l'a effectivement créé (`svissault` sur le Tool Shed de test). Il ne reste qu'à créer/mettre à jour le dépôt côté Tool Shed avec [Planemo](https://planemo.readthedocs.io/).
 
-1. Comptes requis : [Tool Shed de test](https://testtoolshed.g2.bx.psu.edu/) et [Tool Shed principal](https://toolshed.g2.bx.psu.edu/), même `shed_username` sur les deux.
-2. `pip install planemo`, puis `planemo config_init` et compléter `~/.planemo.yml` avec une clé API par shed (**User → Preferences → Manage API Key**) :
+1. Comptes requis : [Tool Shed de test](https://testtoolshed.g2.bx.psu.edu/) et [Tool Shed principal](https://toolshed.g2.bx.psu.edu/), même nom d'utilisateur sur les deux si possible (le champ `owner` de `.shed.yml` doit correspondre à ce nom d'utilisateur réel sur le shed ciblé, pas à un nom arbitraire — un dépôt appartient toujours au compte qui l'a créé).
+2. `pip install planemo`, puis compléter `~/.planemo.yml` avec une clé API par shed (**User → Preferences → Manage API Key**) :
 
    ```yaml
-   test_toolshed:
-     shed_username: "<votre shed_username>"
-     key: "<clé API du Tool Shed de test>"
-   toolshed:
-     shed_username: "<votre shed_username>"
-     key: "<clé API du Tool Shed principal>"
+   sheds:
+     testtoolshed:
+       key: "<clé API du Tool Shed de test>"
+       username: "<votre nom d'utilisateur sur ce shed>"
+     toolshed:
+       key: "<clé API du Tool Shed principal>"
+       username: "<votre nom d'utilisateur sur ce shed>"
    ```
 
+   Vérifier la clé avant d'aller plus loin : `curl "https://<shed>/api/users?key=<clé>"` doit renvoyer une liste JSON (pas `401`/`err_msg`).
 3. `planemo shed_lint --tools` — seule une vraie `ERROR` bloque la publication, les `WARNING` actuels sont connus et acceptés.
-4. Créer d'abord sur le Tool Shed de test, jamais directement sur le principal : `planemo shed_create --shed_target testtoolshed`. Installer ce dépôt dans une instance Galaxy jetable (voir ci-dessus) pour vérifier avant de publier ailleurs.
+4. Créer d'abord sur le Tool Shed de test, jamais directement sur le principal : `planemo shed_create --shed_target testtoolshed` (le nom court est `testtoolshed`, pas `test_toolshed`). Installer ce dépôt dans une instance Galaxy jetable (voir ci-dessus) pour vérifier avant de publier ailleurs.
 5. Une fois satisfait : `planemo shed_create --shed_target toolshed`.
-6. Pour une mise à jour ultérieure (après avoir incrémenté `version=` dans `sedna_fetch.xml`) : `planemo shed_update --check_diff --shed_target toolshed` (répéter sur `testtoolshed` d'abord).
+6. Pour une mise à jour ultérieure (après avoir incrémenté `version=` dans `sedna_fetch.xml`, ou simplement changé la description/les métadonnées) : `planemo shed_update --check_diff --shed_target toolshed` (répéter sur `testtoolshed` d'abord). `shed_update` marche même sans changement de version — c'est ce qui a servi à publier la description mise à jour la première fois.
 
 Une fois publié, l'outil s'installe depuis **Admin → Tool Sheds → Search and browse tool sheds** sur n'importe quelle instance Galaxy, sans `git clone` ni édition manuelle de `tool_conf.xml`.
